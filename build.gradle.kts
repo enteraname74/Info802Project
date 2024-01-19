@@ -6,6 +6,9 @@ plugins {
     kotlin("multiplatform") version kotlinVersion
     val kvisionVersion: String by System.getProperties()
     id("io.kvision") version kvisionVersion
+
+    val graphQlVersion: String by System.getProperties()
+    id("com.apollographql.apollo3") version "3.8.2"
 }
 
 version = "1.0.0-SNAPSHOT"
@@ -19,6 +22,7 @@ repositories {
 // Versions
 val kotlinVersion: String by System.getProperties()
 val kvisionVersion: String by System.getProperties()
+val graphQlVersion: String by System.getProperties()
 
 kotlin {
     js(IR) {
@@ -52,9 +56,23 @@ kotlin {
         implementation("io.kvision:kvision-bootstrap:$kvisionVersion")
         implementation("io.kvision:kvision-maps:$kvisionVersion")
         implementation("io.kvision:kvision-rest:$kvisionVersion")
+        implementation("io.kvision:kvision-state:$kvisionVersion")
+        implementation(npm("leaflet-routing-machine", "3.2.12"))
+        implementation(npm("left-pad", "1.3.0"))
+        implementation("com.apollographql.apollo3:apollo-runtime:3.8.2")
+        implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
+        // https://mvnrepository.com/artifact/com.google.code.gson/gson
+        implementation("com.google.code.gson:gson:2.10.1")
+
     }
     sourceSets["jsTest"].dependencies {
         implementation(kotlin("test-js"))
         implementation("io.kvision:kvision-testutils:$kvisionVersion")
+    }
+}
+
+apollo {
+    service("service") {
+        packageName.set("com.github.enteraname74")
     }
 }

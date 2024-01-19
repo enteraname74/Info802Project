@@ -1,0 +1,9 @@
+query CarsListQuery {
+    vehicleList {
+        naming{
+            make
+            model
+            version
+        }
+    }
+}
