@@ -7,4 +7,5 @@ package com.github.enteraname74.project.model.environment
 interface EnvironmentVariablesHandler {
     val xAppId: String
     val xClientId: String
+    val openRouteKey: String
 }

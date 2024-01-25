@@ -8,6 +8,9 @@ import com.github.enteraname74.project.model.environment.EnvironmentVariablesHan
 import com.github.enteraname74.project.model.environment.EnvironmentVariablesHandlerJsonImpl
 import com.github.enteraname74.project.model.service.CarService
 
+/**
+ * Implementation of the CarService, using Chargetrip as the data source and apollo for the GraphQl client.
+ */
 class CarServiceImpl: CarService {
     private val environmentVariablesHandler: EnvironmentVariablesHandler = EnvironmentVariablesHandlerJsonImpl()
     private val apolloClient = ApolloClient.Builder()
@@ -30,11 +33,11 @@ class CarServiceImpl: CarService {
         val response = apolloClient.query(CarsListQuery()).execute()
         println("RESPONSE FROM SERV: ${response.data}")
         return response.data?.vehicleList?.map {
-            val model = it?.naming?.model ?: ""
             Car(
                 model = it?.naming?.model ?: "",
                 make = it?.naming?.make ?: "",
-                version = it?.naming?.version ?: ""
+                version = it?.naming?.version ?: "",
+                autonomy = it?.range?.chargetrip_range?.best ?: 0
             )
         } ?: emptyList()
     }

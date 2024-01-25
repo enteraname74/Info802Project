@@ -5,5 +5,11 @@ query CarsListQuery {
             model
             version
         }
+        range {
+            chargetrip_range {
+                best
+                worst
+            }
+        }
     }
 }

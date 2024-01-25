@@ -9,5 +9,6 @@ import kotlinx.serialization.Serializable
 data class Car(
     val make: String,
     val model: String,
-    val version: String
+    val version: String,
+    val autonomy: Int
 )
