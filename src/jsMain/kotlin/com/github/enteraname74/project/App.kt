@@ -8,7 +8,7 @@ import com.github.enteraname74.project.model.service.RouteService
 import com.github.enteraname74.project.model.serviceimpl.CarServiceImpl
 import com.github.enteraname74.project.model.serviceimpl.CityServiceImpl
 import com.github.enteraname74.project.model.serviceimpl.RouteServiceImpl
-import com.github.enteraname74.project.model.utils.initializeMapView
+import com.github.enteraname74.project.model.utils.MapsManager
 import io.kvision.*
 import io.kvision.core.FlexWrap
 import io.kvision.core.JustifyContent
@@ -30,6 +30,7 @@ class App : Application() {
     private val cityService: CityService = CityServiceImpl()
     private val routeService: RouteService = RouteServiceImpl()
     private lateinit var map: Maps
+    private lateinit var mapsManager: MapsManager
 
     init {
         CoroutineScope(Dispatchers.Main).launch {
@@ -48,10 +49,11 @@ class App : Application() {
                 width = maxWidth
 
                 map = maps {
+                    mapsManager = MapsManager(this)
                     id ="map"
                     width = 800.px
                     height = 800.px
-                    initializeMapView()
+                    mapsManager.initializeMapView()
                 }
 
                 mapForms(
@@ -63,7 +65,7 @@ class App : Application() {
                     },
                     cityService = cityService,
                     routeService = routeService,
-                    map = map
+                    mapsManager = mapsManager
                 )
 
             }

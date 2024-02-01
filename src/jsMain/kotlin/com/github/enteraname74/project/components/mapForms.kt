@@ -5,7 +5,6 @@ import com.github.enteraname74.project.model.Coordinates
 import com.github.enteraname74.project.model.FormData
 import com.github.enteraname74.project.model.service.CityService
 import com.github.enteraname74.project.model.service.RouteService
-import com.github.enteraname74.project.model.utils.showRouteFromGeoJson
 import io.kvision.core.*
 import io.kvision.form.formPanel
 import io.kvision.form.select.Select
@@ -18,6 +17,7 @@ import io.kvision.panel.vPanel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.github.enteraname74.project.model.utils.MapsManager
 
 /**
  * Forms used to control what to show on the map.
@@ -26,7 +26,7 @@ fun Container.mapForms(
     carList: List<StringPair>,
     cityService: CityService,
     routeService: RouteService,
-    map: Maps
+    mapsManager: MapsManager
 ) {
 
     var startCities: List<City> = emptyList()
@@ -80,7 +80,7 @@ fun Container.mapForms(
                     startCityCoordinates = startCities.find { it.nom == data.startCity }?.centre ?: Coordinates(coordinates = emptyList()),
                     endCityCoordinates = endCities.find { it.nom == data.endCity }?.centre ?: Coordinates(coordinates = emptyList())
                 )
-                map.showRouteFromGeoJson(route = route)
+                mapsManager.showRouteFromGeoJson(route)
             }
         }
     }
