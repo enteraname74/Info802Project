@@ -1,4 +1,4 @@
-package com.github.enteraname74.project.model
+package com.github.enteraname74.project.model.route
 
 import kotlinx.serialization.Serializable
 

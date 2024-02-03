@@ -8,4 +8,5 @@ interface EnvironmentVariablesHandler {
     val xAppId: String
     val xClientId: String
     val openRouteKey: String
+    val odreApiKey: String
 }

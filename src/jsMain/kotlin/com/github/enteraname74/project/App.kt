@@ -3,9 +3,11 @@ package com.github.enteraname74.project
 import com.github.enteraname74.project.components.mapForms
 import com.github.enteraname74.project.model.Car
 import com.github.enteraname74.project.model.service.CarService
+import com.github.enteraname74.project.model.service.ChargingStationsService
 import com.github.enteraname74.project.model.service.CityService
 import com.github.enteraname74.project.model.service.RouteService
 import com.github.enteraname74.project.model.serviceimpl.CarServiceImpl
+import com.github.enteraname74.project.model.serviceimpl.ChargingStationsServiceImpl
 import com.github.enteraname74.project.model.serviceimpl.CityServiceImpl
 import com.github.enteraname74.project.model.serviceimpl.RouteServiceImpl
 import com.github.enteraname74.project.model.utils.MapsManager
@@ -29,6 +31,8 @@ class App : Application() {
     private val carService: CarService = CarServiceImpl()
     private val cityService: CityService = CityServiceImpl()
     private val routeService: RouteService = RouteServiceImpl()
+    private val chargingStationService: ChargingStationsService = ChargingStationsServiceImpl()
+
     private lateinit var map: Maps
     private lateinit var mapsManager: MapsManager
 
@@ -60,14 +64,18 @@ class App : Application() {
                     carList = carList.map {
                         StringPair(
                             first = carList.indexOf(it).toString(),
-                            second = "${it.make} ${it.model} ${it.version}"
+                            second = "${it.make} ${it.model} ${it.version} ${it.autonomy}km of autonomy"
                         )
                     },
                     cityService = cityService,
                     routeService = routeService,
-                    mapsManager = mapsManager
+                    mapsManager = mapsManager,
+                    chargingStationsService = chargingStationService,
+                    retrieveCarMethod = {
+                        val index = it.first.toIntOrNull() ?: 0
+                        carList[index]
+                    }
                 )
-
             }
         }
     }

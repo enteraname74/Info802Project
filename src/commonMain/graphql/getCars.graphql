@@ -1,5 +1,5 @@
 query CarsListQuery {
-    vehicleList {
+    vehicleList(size: 20) {
         naming{
             make
             model

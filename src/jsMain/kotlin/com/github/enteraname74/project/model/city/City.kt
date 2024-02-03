@@ -1,5 +1,6 @@
-package com.github.enteraname74.project.model
+package com.github.enteraname74.project.model.city
 
+import com.github.enteraname74.project.model.ListCoordinates
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,5 +10,5 @@ import kotlinx.serialization.Serializable
 data class City(
     val nom: String,
     val code: String,
-    val centre: Coordinates
+    val centre: ListCoordinates
 )

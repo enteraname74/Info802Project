@@ -1,6 +1,6 @@
 package com.github.enteraname74.project.model.serviceimpl
 
-import com.github.enteraname74.project.model.City
+import com.github.enteraname74.project.model.city.City
 import com.github.enteraname74.project.model.service.CityService
 import io.ktor.client.*
 import io.ktor.client.call.*

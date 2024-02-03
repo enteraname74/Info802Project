@@ -31,13 +31,12 @@ class CarServiceImpl: CarService {
 
     override suspend fun getCars(): List<Car> {
         val response = apolloClient.query(CarsListQuery()).execute()
-        println("RESPONSE FROM SERV: ${response.data}")
         return response.data?.vehicleList?.map {
             Car(
                 model = it?.naming?.model ?: "",
                 make = it?.naming?.make ?: "",
                 version = it?.naming?.version ?: "",
-                autonomy = it?.range?.chargetrip_range?.best ?: 0
+                autonomy = it?.range?.chargetrip_range?.best?.toFloat() ?: 350f
             )
         } ?: emptyList()
     }

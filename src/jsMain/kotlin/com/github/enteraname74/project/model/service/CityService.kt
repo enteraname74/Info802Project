@@ -1,6 +1,7 @@
 package com.github.enteraname74.project.model.service
 
-import com.github.enteraname74.project.model.City
+import com.github.enteraname74.project.model.city.City
+
 
 /**
  * Service for managing

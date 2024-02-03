@@ -1,11 +1,16 @@
 package com.github.enteraname74.project.model
 
-import kotlinx.serialization.Serializable
+/**
+ * Represent a coordinate of a point.
+ */
+data class Coordinates(
+    val latitude: Float = 0f,
+    val longitude: Float = 0f
+)
 
 /**
- * Coordinates for a city.
+ * Transform a Coordinates to a ListCoordinates.
  */
-@Serializable
-data class Coordinates(
-    val coordinates: List<Float>
+fun Coordinates.toListCoordinates(): ListCoordinates = ListCoordinates(
+    coordinates = listOf(longitude, latitude)
 )
