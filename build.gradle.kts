@@ -58,6 +58,7 @@ kotlin {
         implementation("io.kvision:kvision-maps:$kvisionVersion")
         implementation("io.kvision:kvision-rest:$kvisionVersion")
         implementation("io.kvision:kvision-state:$kvisionVersion")
+        implementation("io.kvision:kvision-toastify:$kvisionVersion")
         implementation("io.kvision:kvision-tom-select-remote:$kvisionVersion")
 
         // GraphQl

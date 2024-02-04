@@ -5,6 +5,8 @@ import com.github.enteraname74.project.model.MapRouteInformation
 import io.kvision.maps.Maps
 import io.kvision.maps.externals.geojson.MultiLineString
 import io.kvision.maps.externals.leaflet.geo.LatLng
+import io.kvision.maps.externals.leaflet.layer.FeatureGroup
+import io.kvision.maps.externals.leaflet.layer.Layer
 import io.kvision.maps.externals.leaflet.layer.marker.Marker
 import io.kvision.maps.externals.leaflet.layer.vector.Polyline
 
@@ -14,7 +16,13 @@ import io.kvision.maps.externals.leaflet.layer.vector.Polyline
 class MapsManager(
     private val maps: Maps
 ) {
-    private val routeManager = MapsRoutesManager(maps)
+    private val tileLayer = Maps.L.tileLayer(
+        urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        configure = {
+            maxZoom = 19
+        }
+    )
+    private val routeManager = MapsRoutesManager(maps, tileLayer)
 
     /**
      * Initialize the map with tiles and an initial zoom on France.
@@ -25,29 +33,15 @@ class MapsManager(
                 center = LatLng(46.71109, 1.7191036),
                 zoom = 6
             )
-            Maps.L.tileLayer(
-                urlTemplate = "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                configure = {
-                    maxZoom = 19
-                }
-            ).addTo(this)
-        }
-    }
-
-    /**
-     * Remove the previous shown route.
-     */
-    private fun removePreviousRoute() {
-        maps.leafletMap {
-
+            tileLayer.addTo(this)
         }
     }
 
     /**
      * Show a route in the map.
      */
-    fun showRouteFromGeoJson(mapRouteInformation: MapRouteInformation) {
-        routeManager.showRouteFromGeoJson(mapRouteInformation)
+    fun showRouteFromInformation(mapRouteInformation: MapRouteInformation) {
+        routeManager.showRouteFromInformation(mapRouteInformation)
     }
 }
 
@@ -55,24 +49,25 @@ class MapsManager(
  * Contains all elements related to the view of the route on the maps.
  */
 private class MapsRoutesManager(
-    private val maps: Maps
+    private val maps: Maps,
+    private val mapLayer: Layer<*>
 ) {
     private var startMarker: Marker = Marker(LatLng(0,0))
     private var endMarker: Marker = Marker(LatLng(0,0))
     private var routeLines: Polyline<MultiLineString> = Polyline(latlngs = arrayOf(arrayOf()))
-    private var chargingStations: ArrayList<Marker> = arrayListOf()
+
+    private var chargingStations: FeatureGroup = FeatureGroup()
 
     /**
      * Remove the previous route shown on the map.
      */
     private fun removePreviousRoute() {
         maps.leafletMap {
+            Maps.L.featureGroup(layers = arrayOf(mapLayer)).clearLayers().addTo(this)
+            chargingStations.clearLayers()
             startMarker.remove()
             endMarker.remove()
             routeLines.remove()
-            chargingStations.forEach {
-                it.remove()
-            }
         }
     }
 
@@ -105,16 +100,18 @@ private class MapsRoutesManager(
      * Add charging stations markers on the map.
      */
     private fun addChargingStationsMarker(stations: List<Coordinates>) {
-        chargingStations.addAll(
-            stations.map { Maps.L.marker(latlng = it.toLatLng())}
-        )
+        val markers = stations.map { Maps.L.marker(latlng = it.toLatLng()) }
         maps.leafletMap {
-            chargingStations.forEach {
-                it.addTo(this)
+            markers.forEach {
+                it.addTo(chargingStations)
             }
+            this.addLayer(chargingStations)
         }
     }
 
+    /**
+     * Add the route lines.
+     */
     private fun addRoute(route: List<Coordinates>) {
         routeLines = Maps.L.multiPolyline(
             latLngs = listOf(
@@ -127,29 +124,12 @@ private class MapsRoutesManager(
     }
 
     /**
-     * Build new markers to be used for the view of the route on the map.
-     */
-    private fun buildNewMarkers(route: List<Coordinates>) {
-        val startCoordinates = route[0]
-        val endCoordinates = route.last()
-
-        maps.leafletMap {
-            startMarker = Maps.L.marker(latlng = startCoordinates.toLatLng())
-
-            endMarker = Maps.L.marker(latlng = endCoordinates.toLatLng())
-
-            routeLines = Maps.L.multiPolyline(
-                latLngs = listOf(
-                    route.map { it.toLatLng() }
-                )
-            )
-        }
-    }
-
-    /**
      * Show a route in the map.
      */
-    fun showRouteFromGeoJson(mapRouteInformation: MapRouteInformation) {
+    fun showRouteFromInformation(mapRouteInformation: MapRouteInformation) {
+        maps.leafletMap {
+            chargingStations.addTo(this)
+        }
         console.log("${mapRouteInformation.chargingStations}")
         removePreviousRoute()
         addStartCityMarker(cityCoordinate = mapRouteInformation.startCoordinates)

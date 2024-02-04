@@ -12,15 +12,18 @@ import com.github.enteraname74.project.model.serviceimpl.CityServiceImpl
 import com.github.enteraname74.project.model.serviceimpl.RouteServiceImpl
 import com.github.enteraname74.project.model.utils.MapsManager
 import io.kvision.*
-import io.kvision.core.FlexWrap
-import io.kvision.core.JustifyContent
+import io.kvision.core.CssSize
+import io.kvision.core.Position
 import io.kvision.core.StringPair
+import io.kvision.html.div
 import io.kvision.maps.Maps
 import io.kvision.maps.maps
-import io.kvision.panel.hPanel
 import io.kvision.panel.root
 import io.kvision.state.bind
 import io.kvision.state.observableListOf
+import io.kvision.utils.pc
+import io.kvision.utils.perc
+import io.kvision.utils.pt
 import io.kvision.utils.px
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,19 +47,17 @@ class App : Application() {
 
     override fun start() {
         root("kvapp").bind(carList) {
-            margin = 32.px
-            hPanel(
-                wrap = FlexWrap.WRAP,
-                spacing = 120,
-                justify = JustifyContent.CENTER
-            ) {
+            div {
                 width = maxWidth
+                height = maxHeight
 
                 map = maps {
+                    zIndex = 0
+                    position = Position.ABSOLUTE
                     mapsManager = MapsManager(this)
                     id ="map"
-                    width = 800.px
-                    height = 800.px
+                    width = 100.perc
+                    height = 100.perc
                     mapsManager.initializeMapView()
                 }
 
