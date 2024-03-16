@@ -31,16 +31,14 @@ class RouteServiceImpl: RouteService {
     }
 
     override suspend fun getRouteFromCoordinates(
-        startCityCoordinates: Coordinates,
-        endCityCoordinates: Coordinates,
+        startCoordinates: Coordinates,
+        endCoordinates: Coordinates,
         chargingStations: List<Coordinates>
     ): List<Coordinates> {
-        val markers: ArrayList<List<Float>> = arrayListOf(startCityCoordinates.toListCoordinates().coordinates)
+        val markers: ArrayList<List<Float>> = arrayListOf(startCoordinates.toListCoordinates().coordinates)
         markers.addAll(chargingStations.map { it.toListCoordinates().coordinates })
-        markers.add(endCityCoordinates.toListCoordinates().coordinates)
+        markers.add(endCoordinates.toListCoordinates().coordinates)
         val body = "{\"coordinates\": $markers}"
-
-        console.log(body)
 
         val request =  httpClient.post("https://api.openrouteservice.org/v2/directions/driving-car/geojson") {
             headers {

@@ -3,7 +3,7 @@ package com.github.enteraname74.project.model.service
 import com.github.enteraname74.project.model.Car
 
 /**
- * Interface for managing cars.
+ * Service for managing cars.
  */
 interface CarService {
     /**

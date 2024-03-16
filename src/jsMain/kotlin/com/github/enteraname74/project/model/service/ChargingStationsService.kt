@@ -4,7 +4,7 @@ import com.github.enteraname74.project.model.Coordinates
 import com.github.enteraname74.project.model.station.ChargingStation
 
 /**
- * Interface for managing charging stations.
+ * Service for managing charging stations.
  */
 interface ChargingStationsService {
     /**

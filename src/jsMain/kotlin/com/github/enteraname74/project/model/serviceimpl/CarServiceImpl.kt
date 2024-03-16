@@ -11,7 +11,7 @@ import com.github.enteraname74.project.model.service.CarService
 /**
  * Implementation of the CarService, using Chargetrip as the data source and apollo for the GraphQl client.
  */
-class CarServiceImpl: CarService {
+class CarServiceImpl : CarService {
     private val environmentVariablesHandler: EnvironmentVariablesHandler = EnvironmentVariablesHandlerJsonImpl()
     private val apolloClient = ApolloClient.Builder()
         .serverUrl("https://api.chargetrip.io/graphql'")
@@ -22,7 +22,7 @@ class CarServiceImpl: CarService {
                     value = environmentVariablesHandler.xAppId
                 ),
                 HttpHeader(
-                    name =  "x-client-id",
+                    name = "x-client-id",
                     value = environmentVariablesHandler.xClientId
                 )
             )
@@ -38,6 +38,6 @@ class CarServiceImpl: CarService {
                 version = it?.naming?.version ?: "",
                 autonomy = it?.range?.chargetrip_range?.best?.toFloat() ?: 350f
             )
-        } ?: emptyList()
+        }?.sortedByDescending { it.autonomy } ?: emptyList()
     }
 }

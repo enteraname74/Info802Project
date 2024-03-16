@@ -36,8 +36,10 @@ class ChargingStationsServiceImpl : ChargingStationsService {
         val verifiedRadius = if (radius <= 0) radius + 1 else radius
         val distance = "distance(geo_point_borne,geom'$point', ${verifiedRadius}km)"
 
+        val url = "https://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/bornes-irve/records?limit=100&where=$distance"
+        console.log("URL: $url")
         val request =
-            httpClient.get("https://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/bornes-irve/records?limit=100&where=$distance") {
+            httpClient.get(url) {
                 headers {
                     append(HttpHeaders.Accept, "application/json; charset=utf-8")
                     append(HttpHeaders.Authorization, environmentVariablesHandler.odreApiKey)

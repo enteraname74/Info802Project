@@ -3,13 +3,15 @@ package com.github.enteraname74.project.components
 
 import com.github.enteraname74.project.model.*
 import com.github.enteraname74.project.model.city.City
+import com.github.enteraname74.project.model.routeOptimization.OptimizedRoute
+import com.github.enteraname74.project.model.routeOptimization.RouteOptimization
+import com.github.enteraname74.project.model.routeOptimization.RouteOptimizationFactory
+import com.github.enteraname74.project.model.routeOptimization.UnreachableDestination
 import com.github.enteraname74.project.model.service.ChargingStationsService
 import com.github.enteraname74.project.model.service.CityService
 import com.github.enteraname74.project.model.service.RouteService
+import com.github.enteraname74.project.model.service.TravelDurationService
 import com.github.enteraname74.project.model.utils.MapsManager
-import com.github.enteraname74.project.model.utils.OptimizedRoute
-import com.github.enteraname74.project.model.utils.RouteOptimization
-import com.github.enteraname74.project.model.utils.UnreachableDestination
 import io.kvision.core.Container
 import io.kvision.core.Position
 import io.kvision.core.StringPair
@@ -18,7 +20,10 @@ import io.kvision.form.select.Select
 import io.kvision.form.select.TomSelectCallbacks
 import io.kvision.form.text.TomTypeahead
 import io.kvision.html.button
+import io.kvision.html.div
 import io.kvision.panel.vPanel
+import io.kvision.state.ObservableValue
+import io.kvision.state.bind
 import io.kvision.toast.Toast
 import io.kvision.toast.ToastOptions
 import io.kvision.toast.ToastPosition
@@ -34,11 +39,13 @@ fun Container.mapForms(
     carList: List<StringPair>,
     cityService: CityService,
     chargingStationsService: ChargingStationsService,
+    travelDurationService: TravelDurationService,
     routeService: RouteService,
     mapsManager: MapsManager,
-    retrieveCarMethod: (StringPair) -> Car
+    retrieveCarMethod: (StringPair) -> Car,
 ) {
 
+    val travelDuration = ObservableValue(0f)
     var startCities: List<City> = emptyList()
     var endCities: List<City> = emptyList()
 
@@ -105,30 +112,48 @@ fun Container.mapForms(
 
                 console.log("Retrieved data : $routeInformation")
 
-                val routeOptimization = RouteOptimization(
+                val routeOptimization: RouteOptimization = RouteOptimizationFactory.buildRouteOptimization(
                     routeService = routeService,
                     chargingStationsService = chargingStationsService,
                     routeInformation = routeInformation
                 )
 
                 when (val result = routeOptimization.buildOptimizedRoute()) {
-                    is UnreachableDestination -> Toast.danger(
-                        "The destination is unreachable with the autonomy of your car!",
-                        ToastOptions(
-                            stopOnFocus = false,
-                            position = ToastPosition.BOTTOMRIGHT,
-                            close = true,
-                            duration = 5000
+                    is UnreachableDestination -> {
+                        Toast.danger(
+                            "The destination is unreachable with the autonomy of your car!",
+                            ToastOptions(
+                                stopOnFocus = false,
+                                position = ToastPosition.BOTTOMRIGHT,
+                                close = true,
+                                duration = 5000
+                            )
+
                         )
-                    )
+                        // We reset the travel duration when no route was found:
+                        travelDuration.value = 0f
+                    }
 
                     is OptimizedRoute -> {
-                        mapsManager.showRouteFromInformation(result.route)
+                        val mapRouteInformation = result.route
+                        mapsManager.showRouteFromInformation(mapRouteInformation)
+
+                        travelDurationService.getTotalDuration(
+                            totalDistance = routeOptimization.getTotalDistanceOfRoute(route = mapRouteInformation.route),
+                            totalChargingStations = mapRouteInformation.chargingStations.size,
+                            carChargingTime = .5f
+                        ) { duration ->
+                            travelDuration.value = duration
+                        }
                     }
                 }
             }.invokeOnCompletion {
                 this.disabled = false
             }
+        }
+
+        div().bind(travelDuration) {
+            content = "Travel duration estimated at ${travelDuration.value} hours."
         }
     }
 }

@@ -4,7 +4,7 @@ import com.github.enteraname74.project.model.city.City
 
 
 /**
- * Service for managing
+ * Service for managing cities.
  */
 interface CityService {
 

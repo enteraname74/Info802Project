@@ -1,21 +1,31 @@
-package com.github.enteraname74.project.model.utils
+package com.github.enteraname74.project.model.routeOptimizationImpl
 
 import com.github.enteraname74.project.model.Coordinates
 import com.github.enteraname74.project.model.MapRouteInformation
 import com.github.enteraname74.project.model.RouteInformation
+import com.github.enteraname74.project.model.routeOptimization.*
 import com.github.enteraname74.project.model.service.ChargingStationsService
 import com.github.enteraname74.project.model.service.RouteService
 import com.github.enteraname74.project.model.station.ChargingStation
 import com.github.enteraname74.project.model.station.toCoordinates
-import kotlin.math.*
+import kotlin.math.ceil
 
 /**
- * Optimize a given route with car autonomy
+ * Optimize a given route with car autonomy and tries to found the shortest route. The mechanism behind is the following:
+ * - Build an initial route between the start and the end.
+ * - Check if the autonomy of the car makes it possible to do the trip without stopping at a charging station.
+ * - If not, we go as far as we can go and backtrack until we found a reachable charging station.
+ * - We build a new initial route with the found charging station and try to do the trip with this new charging station.
+ * - We do these last steps as many times as necessary.
  */
-class RouteOptimization(
-    private val routeService: RouteService,
-    private val chargingStationsService: ChargingStationsService,
-    private val routeInformation: RouteInformation
+class RouteOptimizationByShortestRoute(
+    routeService: RouteService,
+    chargingStationsService: ChargingStationsService,
+    routeInformation: RouteInformation
+) : RouteOptimization(
+    routeService = routeService,
+    chargingStationsService = chargingStationsService,
+    routeInformation = routeInformation
 ) {
 
     private val neededChargingStations: ArrayList<Coordinates> = arrayListOf()
@@ -23,7 +33,7 @@ class RouteOptimization(
     /**
      * Build an optimized route taking into account vehicle capacities and charging stations.
      */
-    suspend fun buildOptimizedRoute(): OptimizationResult {
+    override suspend fun buildOptimizedRoute(): OptimizationResult {
 
         var canContinueBuildOptimizedRoute = true
         var currentRoute: List<Coordinates> = emptyList()
@@ -31,8 +41,8 @@ class RouteOptimization(
         while (canContinueBuildOptimizedRoute) {
             // We build a route from a starting point, an end point and a list of necessary charging stations to stop at.
             currentRoute = routeService.getRouteFromCoordinates(
-                startCityCoordinates = routeInformation.startCityCoordinates,
-                endCityCoordinates = routeInformation.endCityCoordinates,
+                startCoordinates = routeInformation.startCityCoordinates,
+                endCoordinates = routeInformation.endCityCoordinates,
                 chargingStations = neededChargingStations
             )
             console.log("Found current route with ${currentRoute.size} polylines.")
@@ -101,38 +111,6 @@ class RouteOptimization(
     }
 
     /**
-     * Backtrack until a charging station is found or return null.
-     */
-    private suspend fun backtrackUntilChargingStation(
-        maxBacktrackingIndex: Int,
-        currentCoordinateIndex: Int,
-        routesCoordinates: List<Coordinates>,
-        vehicleCurrentAutonomy: Float
-    ): ChargingStation? {
-        var vehicleAutonomy = vehicleCurrentAutonomy
-        var coordinateIndex = currentCoordinateIndex
-        var foundStation: ChargingStation? = null
-        while (coordinateIndex >= maxBacktrackingIndex && foundStation == null) {
-            console.log("BACKTRACK - need to find station with index of : $coordinateIndex, autonomy of : $vehicleAutonomy and max backtrack of $maxBacktrackingIndex")
-            foundStation = getNearChargingStation(
-                coordinates = routesCoordinates[coordinateIndex],
-                vehicleCurrentAutonomy = vehicleAutonomy
-            )
-
-            for (i in 0 until 10) {
-                coordinateIndex -= 1
-                if (coordinateIndex < maxBacktrackingIndex) break
-                vehicleAutonomy += getDistanceBetweenTwoCoordinates(
-                    startPoint = routesCoordinates[coordinateIndex],
-                    endPoint = routesCoordinates[coordinateIndex + 1]
-                )
-            }
-        }
-
-        return foundStation
-    }
-
-    /**
      * Tries to retrieve the nearest charging station for a vehicle to charge itself.
      * @param coordinates the current position of the vehicle.
      * @param vehicleCurrentAutonomy the current autonomy of the vehicle when at the given coordinates.
@@ -155,24 +133,6 @@ class RouteOptimization(
 
         return sortedStations.first()
     }
-
-    /**
-     * Check if a coordinates is corresponding to a charging station.
-     * It will check if the given point is near a station (less than half a kilometer away).
-     */
-    private fun isChargingStation(coordinates: Coordinates): Boolean {
-        return neededChargingStations.any {
-            getDistanceBetweenTwoCoordinates(
-                startPoint = it,
-                endPoint = coordinates
-            ) <= 0.5f
-        }
-    }
-
-    /**
-     * Transform a double to a radian.
-     */
-    private fun toRadians(deg: Double): Double = deg / 180.0 * PI
 
     /**
      * Retrieve information (index of max reachable coordinates and autonomy of vehicle at this point) about the last
@@ -217,64 +177,47 @@ class RouteOptimization(
     }
 
     /**
-     * Retrieve the total distance to do for a route.
+     * Backtrack until a charging station is found or return null.
      */
-    private fun getTotalDistanceOfRoute(route: List<Coordinates>): Float {
-        var totalDistance = 0f
-        for (i in 0 until route.size - 1) {
-            totalDistance += getDistanceBetweenTwoCoordinates(
-                startPoint = route[i],
-                endPoint = route[i + 1]
+    private suspend fun backtrackUntilChargingStation(
+        maxBacktrackingIndex: Int,
+        currentCoordinateIndex: Int,
+        routesCoordinates: List<Coordinates>,
+        vehicleCurrentAutonomy: Float
+    ): ChargingStation? {
+        var vehicleAutonomy = vehicleCurrentAutonomy
+        var coordinateIndex = currentCoordinateIndex
+        var foundStation: ChargingStation? = null
+        while (coordinateIndex >= maxBacktrackingIndex && foundStation == null) {
+            console.log("BACKTRACK - need to find station with index of : $coordinateIndex, autonomy of : $vehicleAutonomy and max backtrack of $maxBacktrackingIndex")
+            foundStation = getNearChargingStation(
+                coordinates = routesCoordinates[coordinateIndex],
+                vehicleCurrentAutonomy = vehicleAutonomy
             )
+
+            for (i in 0 until 10) {
+                coordinateIndex -= 1
+                if (coordinateIndex < maxBacktrackingIndex) break
+                vehicleAutonomy += getDistanceBetweenTwoCoordinates(
+                    startPoint = routesCoordinates[coordinateIndex],
+                    endPoint = routesCoordinates[coordinateIndex + 1]
+                )
+            }
         }
-        return totalDistance
+
+        return foundStation
     }
 
     /**
-     * Retrieve the distance between two coordinates, in kilometers.
+     * Check if a coordinates is corresponding to a charging station.
+     * It will check if the given point is near a station (less than half a kilometer away).
      */
-    private fun getDistanceBetweenTwoCoordinates(
-        startPoint: Coordinates,
-        endPoint: Coordinates
-    ): Float {
-        val earthRadius = 6371 // Radius of the earth
-
-        val latDistance = toRadians((endPoint.latitude - startPoint.latitude).toDouble())
-        val lonDistance = toRadians((endPoint.longitude - startPoint.longitude).toDouble())
-
-        val a = sin(latDistance / 2) * sin(latDistance / 2) + cos(toRadians(startPoint.latitude.toDouble())) * cos(
-            toRadians(endPoint.latitude.toDouble())
-        ) * sin(lonDistance / 2) * sin(lonDistance / 2)
-
-        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-        // Distance in kilometers
-        val distance = earthRadius * c
-
-        return distance.toFloat()
+    private fun isChargingStation(coordinates: Coordinates): Boolean {
+        return neededChargingStations.any {
+            getDistanceBetweenTwoCoordinates(
+                startPoint = it,
+                endPoint = coordinates
+            ) <= 0.5f
+        }
     }
 }
-
-/**
- * Information about the state of a vehicle at a coordinates index.
- */
-private data class VehicleCoordinatesStateInformation(
-    val lastChargingStationIndex: Int,
-    val coordinatesIndex: Int,
-    val vehicleAutonomyAtPoint: Float
-)
-
-/**
- * Define the result of an optimized request.
- */
-sealed interface OptimizationResult
-
-/**
- * Result when a destination is unreachable.
- */
-data class UnreachableDestination(val route: MapRouteInformation) : OptimizationResult
-
-/**
- * Result when a destination is reachable and has been optimized.
- */
-data class OptimizedRoute(val route: MapRouteInformation) : OptimizationResult
