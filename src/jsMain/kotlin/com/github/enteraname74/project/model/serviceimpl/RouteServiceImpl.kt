@@ -14,10 +14,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
-/**val route = routeService.getRouteFromCoordinates(
-                    startCityCoordinates = startCities.find { it.nom == data.startCity }?.centre ?: Coordinates(coordinates = emptyList()),
-                    endCityCoordinates = endCities.find { it.nom == data.endCity }?.centre ?: Coordinates(coordinates = emptyList())
-                )
+/**
  * Implementation of the RouteService, using Open Route Service for the data source and Ktor for the HTTP client.
  */
 class RouteServiceImpl: RouteService {

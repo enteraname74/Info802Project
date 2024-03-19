@@ -100,8 +100,6 @@ fun Container.mapForms(
 
                 val data = formPanel.getData()
 
-                console.log("Retrieved data : $data")
-
                 val routeInformation = RouteInformation(
                     startCityCoordinates = startCities.find { it.nom == data.startCity }?.centre?.toCoordinates()
                         ?: startCities.firstOrNull()?.centre?.toCoordinates() ?: Coordinates(),
@@ -109,8 +107,6 @@ fun Container.mapForms(
                         ?: endCities.firstOrNull()?.centre?.toCoordinates() ?: Coordinates(),
                     carInformation = retrieveCarMethod(carList.find { it.first == data.carType }!!)
                 )
-
-                console.log("Retrieved data : $routeInformation")
 
                 val routeOptimization: RouteOptimization = RouteOptimizationFactory.buildRouteOptimization(
                     routeService = routeService,
