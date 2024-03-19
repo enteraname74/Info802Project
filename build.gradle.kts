@@ -6,6 +6,9 @@ plugins {
     kotlin("multiplatform") version kotlinVersion
     val kvisionVersion: String by System.getProperties()
     id("io.kvision") version kvisionVersion
+
+    val graphQlVersion: String by System.getProperties()
+    id("com.apollographql.apollo3") version graphQlVersion
 }
 
 version = "1.0.0-SNAPSHOT"
@@ -19,6 +22,8 @@ repositories {
 // Versions
 val kotlinVersion: String by System.getProperties()
 val kvisionVersion: String by System.getProperties()
+val graphQlVersion: String by System.getProperties()
+val ktorVersion: String by System.getProperties()
 
 kotlin {
     js(IR) {
@@ -52,9 +57,25 @@ kotlin {
         implementation("io.kvision:kvision-bootstrap:$kvisionVersion")
         implementation("io.kvision:kvision-maps:$kvisionVersion")
         implementation("io.kvision:kvision-rest:$kvisionVersion")
+        implementation("io.kvision:kvision-state:$kvisionVersion")
+        implementation("io.kvision:kvision-toastify:$kvisionVersion")
+        implementation("io.kvision:kvision-tom-select-remote:$kvisionVersion")
+
+        // GraphQl
+        implementation("com.apollographql.apollo3:apollo-runtime:$graphQlVersion")
+
+        // ktor
+        implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+        implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
     }
     sourceSets["jsTest"].dependencies {
         implementation(kotlin("test-js"))
         implementation("io.kvision:kvision-testutils:$kvisionVersion")
+    }
+}
+
+apollo {
+    service("service") {
+        packageName.set("com.github.enteraname74")
     }
 }

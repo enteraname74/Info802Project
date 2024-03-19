@@ -1,20 +1,79 @@
 package com.github.enteraname74.project
 
-import io.kvision.Application
-import io.kvision.CoreModule
-import io.kvision.BootstrapModule
-import io.kvision.BootstrapCssModule
-import io.kvision.MapsModule
+import com.github.enteraname74.project.components.mapForms
+import com.github.enteraname74.project.model.Car
+import com.github.enteraname74.project.model.service.*
+import com.github.enteraname74.project.model.serviceimpl.*
+import com.github.enteraname74.project.model.utils.MapsManager
+import io.kvision.*
+import io.kvision.core.CssSize
+import io.kvision.core.Position
+import io.kvision.core.StringPair
 import io.kvision.html.div
-import io.kvision.module
+import io.kvision.maps.Maps
+import io.kvision.maps.maps
 import io.kvision.panel.root
-import io.kvision.startApplication
+import io.kvision.state.bind
+import io.kvision.state.observableListOf
+import io.kvision.utils.pc
+import io.kvision.utils.perc
+import io.kvision.utils.pt
+import io.kvision.utils.px
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class App : Application() {
+    private val carList = observableListOf<Car>()
+    private val carService: CarService = CarServiceImpl()
+    private val cityService: CityService = CityServiceImpl()
+    private val routeService: RouteService = RouteServiceImpl()
+    private val chargingStationService: ChargingStationsService = ChargingStationsServiceImpl()
+    private val travelDurationService: TravelDurationService = TravelDurationServiceImpl()
+
+    private lateinit var map: Maps
+    private lateinit var mapsManager: MapsManager
+
+    init {
+        CoroutineScope(Dispatchers.Main).launch {
+            carList.addAll(carService.getCars())
+        }
+    }
+
     override fun start() {
-        root("kvapp") {
-            div("Hello world")
-            // TODO
+        root("kvapp").bind(carList) {
+            div {
+                width = maxWidth
+                height = maxHeight
+
+                map = maps {
+                    zIndex = 0
+                    position = Position.ABSOLUTE
+                    mapsManager = MapsManager(this)
+                    id ="map"
+                    width = 100.perc
+                    height = 100.perc
+                    mapsManager.initializeMapView()
+                }
+
+                mapForms(
+                    carList = carList.map {
+                        StringPair(
+                            first = carList.indexOf(it).toString(),
+                            second = "${it.make} ${it.model} ${it.version} ${it.autonomy}km of autonomy"
+                        )
+                    },
+                    cityService = cityService,
+                    routeService = routeService,
+                    mapsManager = mapsManager,
+                    chargingStationsService = chargingStationService,
+                    travelDurationService = travelDurationService,
+                    retrieveCarMethod = {
+                        val index = it.first.toIntOrNull() ?: 0
+                        carList[index]
+                    }
+                )
+            }
         }
     }
 }
@@ -26,6 +85,7 @@ fun main() {
         BootstrapModule,
         BootstrapCssModule,
         MapsModule,
-        CoreModule
+        CoreModule,
+        TomSelectModule
     )
 }

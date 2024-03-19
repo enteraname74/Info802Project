@@ -1,0 +1,15 @@
+query CarsListQuery {
+    vehicleList(size: 20) {
+        naming{
+            make
+            model
+            version
+        }
+        range {
+            chargetrip_range {
+                best
+                worst
+            }
+        }
+    }
+}

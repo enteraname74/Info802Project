@@ -5,3 +5,5 @@ out/
 *.ipr
 *.iws
 *.idea
+src/jsMain/kotlin/com/github/enteraname74/project/model/environment/EnvironmentVariablesHandlerJsonImpl.kt
+node_modules
